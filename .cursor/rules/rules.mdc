@@ -1,0 +1,74 @@
+---
+alwaysApply: true
+---
+
+# DO NOT implement unless asked
+
+# DO NOT add code snippets to markdown files
+
+# ALWAYS add docstrings to classes and methods
+
+# Rules for Java + Spring Boot Backend Development
+
+## Project Setup
+- Use **Java 21**.
+- Use **Spring Boot 3.x** with **Gradle** as build tool.
+- Maintain **modular project structure**:  
+  - `controller` → REST endpoints  
+  - `service` → business logic  
+  - `repository` → database access (Spring Data JPA)  
+  - `model/entity` → JPA entities, DTOs, records  
+  - `config` → configuration (CORS, Security, Swagger, etc.)  
+  - `exception` → custom exception handling  
+
+## API Design
+- Follow **REST best practices**:
+  - Use plural resource names (`/users`, `/products/{id}`, `/orders/{id}/items`).
+  - Use proper HTTP methods:  
+    - `GET` → read  
+    - `POST` → create  
+    - `PUT` → full update  
+    - `PATCH` → partial update  
+    - `DELETE` → delete  
+  - Return proper HTTP status codes (201 Created, 404 Not Found, 400 Bad Request, etc.).
+- Use `ResponseEntity<T>` for responses.
+- Implement **global exception handling** with `@ControllerAdvice`.
+
+## Data & Persistence
+- Use **Spring Data JPA** for repositories.
+- Entities should use:
+  - `@Entity`, `@Table`, `@Id`, `@GeneratedValue(strategy = GenerationType.IDENTITY)`  
+  - `@Column(nullable = false)` where appropriate  
+  - `@OneToMany`, `@ManyToOne`, `@ManyToMany` with `fetch = FetchType.LAZY` by default.
+- Use DTOs (records or classes) for request/response instead of exposing entities directly.
+
+## Validation & Security
+- Apply **Bean Validation** (`@NotNull`, `@Size`, `@Email`, etc.) in DTOs.
+- Implement **Spring Security** with JWT authentication if required.
+- Enable **CORS** configuration for frontend apps.
+
+## Documentation
+- Integrate **Springdoc OpenAPI (Swagger)**:
+  - Dependency: `springdoc-openapi-starter-webmvc-ui`
+  - Swagger UI available at `/swagger-ui.html`
+
+## Testing
+- Use **JUnit 5** + **Mockito**.
+- Follow test pyramid:
+  - Unit tests → Service layer  
+  - Integration tests → Controllers + Repositories (using H2 in-memory DB)
+- Place tests under `src/test/java`.
+
+## Code Style
+- Follow **Google Java Style** or **Spring style guide**.
+- Use `@Slf4j` (Lombok) for logging.
+- Avoid business logic in controllers; delegate to services.
+- Keep classes small, single-responsibility.
+- Use constructor-based dependency injection (no field injection).
+
+## Performance & Best Practices
+- Use **pagination** (`Pageable`, `Slice`) for list endpoints.
+- Avoid N+1 queries (use `@EntityGraph` or `JOIN FETCH` when needed).
+- Prefer `record` for immutable DTOs in Java 17+.
+- Handle errors gracefully, return structured error responses (e.g., `{ "error": "Not Found", "message": "...", "timestamp": ... }`).
+
