@@ -8,6 +8,8 @@ alwaysApply: true
 
 # ALWAYS add docstrings to classes and methods
 
+# ALWAYS update `tasks/README.md` after implementing a task
+
 # Rules for Java + Spring Boot Backend Development
 
 ## Project Setup
