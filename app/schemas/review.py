@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4, Field, validator
+from pydantic import BaseModel, UUID4, Field
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
@@ -31,7 +31,7 @@ class ReviewSummary(ReviewBase):
     book_id: UUID4
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -40,14 +40,23 @@ class ReviewResponse(ReviewSummary):
     """Full schema for review response data with relationships."""
     user: Optional["UserResponse"] = None
     book: Optional["BookSummary"] = None
-    
+
     class Config:
         from_attributes = True
 
 
 class ReviewWithUser(ReviewSummary):
     """Review schema with user information."""
-    user_name: Optional[str] = None  # Computed field from user.first_name + last_name
-    
+    # Computed field from user.first_name + last_name
+    user_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewWithBook(ReviewSummary):
+    """Review schema with book information for user's reviews."""
+    book: Optional["BookSummary"] = None
+
     class Config:
         from_attributes = True
