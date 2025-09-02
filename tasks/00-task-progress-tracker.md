@@ -10,9 +10,9 @@
 ## Overall Progress
 
 - **Total Tasks**: 10
-- **Completed**: 1
+- **Completed**: 2
 - **In Progress**: 0
-- **Not Started**: 9
+- **Not Started**: 8
 
 ---
 
@@ -23,7 +23,7 @@
 | Task | Title | Status | Assigned | Completed |
 |------|-------|--------|----------|-----------|
 | 01 | Project Setup & Development Environment | 🚀 Completed | Rahul Dange | 2025-02-09 |
-| 02 | Database Models & Migrations | ⏳ Not Started | - | - |
+| 02 | Database Models & Migrations | 🚀 Completed | Rahul Dange | 2025-09-02 |
 | 03 | Authentication & Security System | ⏳ Not Started | - | - |
 | 04 | User Management API | ⏳ Not Started | - | - |
 
