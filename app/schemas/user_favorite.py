@@ -1,6 +1,9 @@
 from pydantic import BaseModel, UUID4
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .book import BookSummary
 
 
 class UserFavoriteBase(BaseModel):
@@ -25,8 +28,6 @@ class UserFavoriteResponse(UserFavoriteBase):
 
 class UserFavoriteWithBook(UserFavoriteResponse):
     """User favorite schema with book information."""
-    from .book import BookSummary  # Forward reference
-    
     book: Optional["BookSummary"] = None
     
     class Config:

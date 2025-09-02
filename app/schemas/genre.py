@@ -1,6 +1,9 @@
 from pydantic import BaseModel, UUID4, Field
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .book import BookSummary
 
 
 class GenreBase(BaseModel):
@@ -32,7 +35,6 @@ class GenreResponse(GenreBase):
 # For nested responses
 class GenreWithBooks(GenreResponse):
     """Schema for genre with associated books."""
-    from .book import BookSummary  # Forward reference
     books: List["BookSummary"] = []
     
     class Config:

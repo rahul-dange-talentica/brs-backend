@@ -1,6 +1,10 @@
 from pydantic import BaseModel, UUID4, Field, validator
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .user import UserResponse
+    from .book import BookSummary
 
 
 class ReviewBase(BaseModel):
@@ -34,9 +38,6 @@ class ReviewSummary(ReviewBase):
 
 class ReviewResponse(ReviewSummary):
     """Full schema for review response data with relationships."""
-    from .user import UserResponse  # Forward reference
-    from .book import BookSummary   # Forward reference
-    
     user: Optional["UserResponse"] = None
     book: Optional["BookSummary"] = None
     

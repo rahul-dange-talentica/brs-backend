@@ -1,7 +1,11 @@
 from pydantic import BaseModel, UUID4, Field, validator
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from decimal import Decimal
+
+if TYPE_CHECKING:
+    from .genre import GenreResponse
+    from .review import ReviewSummary
 
 
 class BookBase(BaseModel):
@@ -44,9 +48,6 @@ class BookSummary(BookBase):
 
 class BookResponse(BookSummary):
     """Full schema for book response data with relationships."""
-    from .genre import GenreResponse  # Forward reference
-    from .review import ReviewSummary  # Forward reference
-    
     genres: List["GenreResponse"] = []
     recent_reviews: List["ReviewSummary"] = []
     
