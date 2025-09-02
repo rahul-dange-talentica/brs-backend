@@ -327,9 +327,14 @@ class TestRelationships:
         """Test user-reviews relationship."""
         user, book, _, _ = sample_data
         
-        # Create reviews
+        # Create a second book for the second review (due to unique constraint)
+        book2 = Book(title="Second Test Book", author="Test Author 2")
+        db_session.add(book2)
+        db_session.commit()
+        
+        # Create reviews (one per book due to unique constraint)
         review1 = Review(user_id=user.id, book_id=book.id, rating=5)
-        review2 = Review(user_id=user.id, book_id=book.id, rating=4)
+        review2 = Review(user_id=user.id, book_id=book2.id, rating=4)
         
         db_session.add_all([review1, review2])
         db_session.commit()

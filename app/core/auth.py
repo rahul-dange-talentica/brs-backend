@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
+import uuid
 
 from app.database import get_db
 from app.models.user import User
@@ -44,11 +45,17 @@ async def get_current_user(
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
+        
+        # Convert string UUID to UUID object
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except ValueError:
+            raise credentials_exception
             
     except Exception:
         raise credentials_exception
     
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == user_uuid).first()
     if user is None:
         raise credentials_exception
     
@@ -101,8 +108,14 @@ def get_optional_current_user(
         user_id: str = payload.get("sub")
         if user_id is None:
             return None
+        
+        # Convert string UUID to UUID object
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except ValueError:
+            return None
             
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(User).filter(User.id == user_uuid).first()
         if user is None or not user.is_active:
             return None
             

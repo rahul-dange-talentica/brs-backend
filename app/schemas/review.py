@@ -1,6 +1,6 @@
-from pydantic import BaseModel, UUID4, Field
+from pydantic import BaseModel, UUID4, Field, validator
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .user import UserResponse
@@ -12,16 +12,28 @@ class ReviewBase(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     review_text: Optional[str] = None
 
+    @validator('review_text')
+    def validate_review_text(cls, v):
+        if v is not None and len(v) > 2000:
+            raise ValueError('Review text cannot exceed 2000 characters')
+        return v
+
 
 class ReviewCreate(ReviewBase):
     """Schema for creating a new review."""
-    book_id: UUID4
+    pass
 
 
 class ReviewUpdate(BaseModel):
     """Schema for updating review information."""
     rating: Optional[int] = Field(None, ge=1, le=5)
     review_text: Optional[str] = None
+
+    @validator('review_text')
+    def validate_review_text(cls, v):
+        if v is not None and len(v) > 2000:
+            raise ValueError('Review text cannot exceed 2000 characters')
+        return v
 
 
 class ReviewSummary(ReviewBase):
@@ -60,3 +72,13 @@ class ReviewWithBook(ReviewSummary):
 
     class Config:
         from_attributes = True
+
+
+class ReviewListResponse(BaseModel):
+    """Schema for paginated review list responses."""
+    reviews: List[ReviewWithUser]
+    total: int
+    skip: int
+    limit: int
+    pages: int
+    book_id: str

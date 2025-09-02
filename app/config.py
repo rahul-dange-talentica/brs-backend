@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     allowed_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     
     # Additional Security Settings
-    trusted_hosts: list[str] = ["localhost", "127.0.0.1", "*.brs.example.com"]
+    trusted_hosts: list[str] = ["localhost", "127.0.0.1", "testserver", "*.brs.example.com"]
     
     class Config:
         env_file = ".env"
