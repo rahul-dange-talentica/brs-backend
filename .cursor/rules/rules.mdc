@@ -7,3 +7,5 @@ alwaysApply: true
 ## DO NOT start implementation unless user asks you.
 
 ## ALWAYS build and test after implementating new code.
+
+## ALWAYS update `tasks\00-task-progress-tracker.md` after completion of task.
