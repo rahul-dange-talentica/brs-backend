@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4, Field, validator
+from pydantic import BaseModel, UUID4, Field
 from datetime import datetime, date
 from typing import Optional, List, TYPE_CHECKING
 from decimal import Decimal
@@ -62,3 +62,26 @@ class BookWithStats(BookSummary):
     
     class Config:
         from_attributes = True
+
+
+class BookListResponse(BaseModel):
+    """Response schema for book listing with pagination."""
+    books: List[BookResponse]
+    total: int
+    skip: int
+    limit: int
+    pages: int
+    search_query: Optional[str] = None
+
+
+class BookSearchParams(BaseModel):
+    """Search parameters for book queries."""
+    q: Optional[str] = None
+    genre_id: Optional[UUID4] = None
+    min_rating: Optional[float] = Field(None, ge=0.0, le=5.0)
+    max_rating: Optional[float] = Field(None, ge=0.0, le=5.0)
+    sort_by: str = Field(
+        "created_at",
+        pattern="^(title|author|average_rating|publication_date|created_at)$"
+    )
+    sort_order: str = Field("desc", pattern="^(asc|desc)$")

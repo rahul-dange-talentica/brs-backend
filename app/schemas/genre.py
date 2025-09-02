@@ -39,3 +39,8 @@ class GenreWithBooks(GenreResponse):
     
     class Config:
         from_attributes = True
+
+
+class GenreWithCount(GenreResponse):
+    """Schema for genre with book count."""
+    book_count: int

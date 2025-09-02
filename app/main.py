@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.config import settings
-from app.api import auth, users
+from app.api import auth, users, books, genres
 
 app = FastAPI(
     title=settings.app_name,
@@ -30,6 +30,8 @@ app.add_middleware(
 # Include API routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
+app.include_router(books.router, prefix="/api/v1")
+app.include_router(genres.router, prefix="/api/v1")
 
 
 @app.get("/")
