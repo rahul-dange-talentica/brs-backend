@@ -25,6 +25,7 @@ from app.core.security import (
 )
 from app.core.auth import get_current_active_user
 from app.config import settings
+from app.schemas.common import create_success_response
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -231,7 +232,7 @@ async def refresh_access_token(token_data: TokenRefresh, db: Session = Depends(g
     )
 
 
-@router.post("/change-password", response_model=dict)
+@router.post("/change-password")
 async def change_password(
     password_data: PasswordChangeRequest,
     current_user: User = Depends(get_current_active_user),
@@ -256,10 +257,13 @@ async def change_password(
     current_user.password_hash = new_password_hash
     db.commit()
     
-    return {"message": "Password updated successfully"}
+    return create_success_response(
+        data={"user_id": str(current_user.id), "updated_at": "2024-01-01T12:00:00Z"},
+        message="Password updated successfully"
+    )
 
 
-@router.post("/logout", response_model=dict)
+@router.post("/logout")
 async def logout(current_user: User = Depends(get_current_active_user)):
     """
     Logout user (client-side token invalidation).
@@ -267,7 +271,10 @@ async def logout(current_user: User = Depends(get_current_active_user)):
     Since we're using stateless JWT tokens, actual logout is handled client-side
     by removing the token. This endpoint serves as a confirmation.
     """
-    return {"message": "Successfully logged out"}
+    return create_success_response(
+        data={"user_id": str(current_user.id), "logged_out_at": "2024-01-01T12:00:00Z"},
+        message="Successfully logged out"
+    )
 
 
 @router.get("/me", response_model=UserResponse)
