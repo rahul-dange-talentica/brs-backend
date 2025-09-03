@@ -1,9 +1,10 @@
 """Popular recommendation engine based on ratings and review counts."""
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 from typing import List, Optional
+import uuid
 
 from app.models.book import Book
 from app.models.genre import Genre
@@ -50,13 +51,20 @@ class PopularRecommendationEngine:
         query = self.db.query(
             Book,
             popularity_score
+        ).options(
+            joinedload(Book.genres)
         ).filter(
             Book.total_reviews >= min_reviews
         )
         
         # Filter by genre if specified
         if genre_id:
-            query = query.filter(Book.genres.any(Genre.id == genre_id))
+            # Convert string UUID to UUID object if needed
+            if isinstance(genre_id, str):
+                genre_uuid = uuid.UUID(genre_id)
+            else:
+                genre_uuid = genre_id
+            query = query.filter(Book.genres.any(Genre.id == genre_uuid))
         
         # Filter by date range if specified
         if days_back:
@@ -114,6 +122,8 @@ class PopularRecommendationEngine:
         query = self.db.query(
             Book,
             trending_score
+        ).options(
+            joinedload(Book.genres)
         ).join(
             recent_activity, Book.id == recent_activity.c.book_id
         ).order_by(

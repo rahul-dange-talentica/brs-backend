@@ -7,7 +7,7 @@ from typing import List, Optional
 from app.database import get_db
 from app.models.user import User
 from app.models.genre import Genre
-from app.schemas.book import BookSummary, BookResponse
+from app.schemas.book import BookResponse
 from app.schemas.recommendation import RecommendationResponse
 from app.core.auth import get_current_user, get_optional_current_user
 from app.core.recommendations import (
@@ -20,7 +20,7 @@ from app.core.recommendations import (
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
 
-@router.get("/popular", response_model=List[BookSummary])
+@router.get("/popular", response_model=dict)
 async def get_popular_recommendations(
     limit: int = Query(20, ge=1, le=100, description="Maximum number of books to return"),
     genre_id: Optional[str] = Query(None, description="Filter by specific genre"),
@@ -35,6 +35,24 @@ async def get_popular_recommendations(
     to prevent books with very few high ratings from dominating the recommendations.
     """
     try:
+        # Validate genre_id if provided
+        if genre_id:
+            try:
+                from uuid import UUID
+                genre_uuid = UUID(genre_id)
+                # Check if genre exists
+                genre = db.query(Genre).filter(Genre.id == genre_uuid).first()
+                if not genre:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail="Genre not found"
+                    )
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Invalid genre ID format"
+                )
+        
         engine = PopularRecommendationEngine(db)
         books = await engine.get_popular_books(
             limit=limit,
@@ -43,8 +61,20 @@ async def get_popular_recommendations(
             days_back=days_back
         )
         
-        return books
+        return {
+            "recommendations": [BookResponse.model_validate(book) for book in books],
+            "recommendation_type": "popular",
+            "total": len(books),
+            "limit": limit,
+            "filters": {
+                "genre_id": genre_id,
+                "min_reviews": min_reviews,
+                "days_back": days_back
+            }
+        }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -52,7 +82,7 @@ async def get_popular_recommendations(
         )
 
 
-@router.get("/trending", response_model=List[BookSummary])
+@router.get("/trending", response_model=dict)
 async def get_trending_recommendations(
     limit: int = Query(20, ge=1, le=100, description="Maximum number of books to return"),
     days_back: int = Query(30, ge=1, le=365, description="Period to analyze for trending"),
@@ -65,6 +95,13 @@ async def get_trending_recommendations(
     Books are ranked by recent review activity and rating quality within the specified time period.
     """
     try:
+        # Validate parameters
+        if days_back < 1 or days_back > 365:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="days_back must be between 1 and 365"
+            )
+        
         engine = PopularRecommendationEngine(db)
         books = await engine.get_trending_books(
             limit=limit,
@@ -72,8 +109,19 @@ async def get_trending_recommendations(
             min_reviews_in_period=min_reviews_in_period
         )
         
-        return books
+        return {
+            "recommendations": [BookResponse.model_validate(book) for book in books],
+            "recommendation_type": "trending",
+            "total": len(books),
+            "limit": limit,
+            "filters": {
+                "days_back": days_back,
+                "min_reviews_in_period": min_reviews_in_period
+            }
+        }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -81,7 +129,7 @@ async def get_trending_recommendations(
         )
 
 
-@router.get("/genre/{genre_id}", response_model=List[BookSummary])
+@router.get("/genre/{genre_id}", response_model=dict)
 async def get_genre_recommendations(
     genre_id: str,
     limit: int = Query(20, ge=1, le=50, description="Maximum number of books to return"),
@@ -97,12 +145,22 @@ async def get_genre_recommendations(
     Returns top-rated books within the specified genre, optionally excluding books
     the authenticated user has already reviewed or favorited.
     """
+    # Validate and convert genre_id to UUID
+    try:
+        from uuid import UUID
+        genre_uuid = UUID(genre_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid genre ID format"
+        )
+    
     # Verify genre exists
-    genre = db.query(Genre).filter(Genre.id == genre_id).first()
+    genre = db.query(Genre).filter(Genre.id == genre_uuid).first()
     if not genre:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Genre with ID {genre_id} not found"
+            detail="Genre not found"
         )
     
     try:
@@ -115,8 +173,24 @@ async def get_genre_recommendations(
             min_reviews=min_reviews
         )
         
-        return books
+        return {
+            "recommendations": [BookResponse.model_validate(book) for book in books],
+            "recommendation_type": "genre-based",
+            "total": len(books),
+            "limit": limit,
+            "genre": {
+                "id": str(genre.id),
+                "name": genre.name
+            },
+            "filters": {
+                "exclude_user_books": exclude_user_books,
+                "min_rating": min_rating,
+                "min_reviews": min_reviews
+            }
+        }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -124,7 +198,7 @@ async def get_genre_recommendations(
         )
 
 
-@router.get("/genre/{genre_id}/similar-to/{book_id}", response_model=List[BookSummary])
+@router.get("/genre/{genre_id}/similar-to/{book_id}", response_model=List[BookResponse])
 async def get_similar_books_in_genre(
     genre_id: str,
     book_id: str,
@@ -162,7 +236,7 @@ async def get_similar_books_in_genre(
         )
 
 
-@router.get("/personal", response_model=RecommendationResponse)
+@router.get("/personal", response_model=dict)
 async def get_personal_recommendations(
     limit: int = Query(20, ge=1, le=50, description="Maximum number of books to return"),
     current_user: User = Depends(get_current_user),
@@ -185,11 +259,14 @@ async def get_personal_recommendations(
             limit=limit
         )
         
-        return RecommendationResponse(
-            books=result['books'],
-            recommendation_type=result['recommendation_type'],
-            explanation=result['explanation']
-        )
+        return {
+            "recommendations": [BookResponse.model_validate(book) for book in result['books']],
+            "recommendation_type": result['recommendation_type'],
+            "total": len(result['books']),
+            "limit": limit,
+            "explanation": result.get('explanation', 'Personalized recommendations based on your reading history'),
+            "user_id": str(current_user.id)
+        }
         
     except Exception as e:
         raise HTTPException(
@@ -198,7 +275,7 @@ async def get_personal_recommendations(
         )
 
 
-@router.get("/diversity", response_model=List[BookSummary])
+@router.get("/diversity", response_model=List[BookResponse])
 async def get_diverse_recommendations(
     limit: int = Query(20, ge=1, le=50, description="Maximum number of books to return"),
     genre_count: int = Query(5, ge=2, le=10, description="Number of different genres to include"),

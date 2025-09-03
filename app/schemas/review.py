@@ -82,3 +82,16 @@ class ReviewListResponse(BaseModel):
     limit: int
     pages: int
     book_id: str
+
+
+# Resolve forward references
+try:
+    from .book import BookSummary
+    from .user import UserResponse
+    
+    # Rebuild models to resolve forward references
+    ReviewResponse.model_rebuild()
+    ReviewWithBook.model_rebuild()
+except ImportError:
+    # Handle cases where the schemas might not be available yet
+    pass

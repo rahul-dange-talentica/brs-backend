@@ -37,7 +37,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 88
+line-length = 100
 target-version = ['py311']
 include = '\.pyi?$'
 extend-exclude = '''
@@ -51,20 +51,90 @@ extend-exclude = '''
   | \.venv
   | build
   | dist
+  | htmlcov
+  | migrations
 )/
 '''
 
 [tool.mypy]
 python_version = "3.11"
-check_untyped_defs = true
-disallow_any_generics = true
-disallow_incomplete_defs = true
+warn_return_any = true
+warn_unused_configs = true
 disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_any_generics = true
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+strict_optional = true
+show_error_codes = true
+
+# Per-module options
+[[tool.mypy.overrides]]
+module = [
+    "tests.*",
+    "alembic.*",
+    "passlib.*",
+    "jose.*",
+    "sqlalchemy.*",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --cov=app --cov-report=html --cov-report=term-missing"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--cov=app",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+    "--strict-markers",
+    "--tb=short",
+]
 asyncio_mode = "auto"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "performance: Performance tests",
+    "slow: Slow tests that take longer to run",
+    "auth: Authentication related tests",
+    "models: Model tests",
+    "api: API endpoint tests",
+    "recommendations: Recommendation engine tests",
+    "schemas: Schema validation tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "app/main.py",
+    "*/tests/*",
+    "*/__init__.py",
+    "*/conftest.py",
+    "app/config.py",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstract",
+]
+show_missing = true
+skip_covered = false
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"

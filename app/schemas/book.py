@@ -85,3 +85,16 @@ class BookSearchParams(BaseModel):
         pattern="^(title|author|average_rating|publication_date|created_at)$"
     )
     sort_order: str = Field("desc", pattern="^(asc|desc)$")
+
+
+# Resolve forward references
+try:
+    from .genre import GenreResponse
+    from .review import ReviewSummary
+    
+    # Rebuild models to resolve forward references
+    BookResponse.model_rebuild()
+    BookWithStats.model_rebuild()
+except ImportError:
+    # Handle cases where the schemas might not be available yet
+    pass

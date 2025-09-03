@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, desc, asc, func
+from sqlalchemy import or_, desc, asc, func, case
 from typing import Optional
 
 from app.database import get_db
@@ -39,13 +39,13 @@ async def get_books(
     # Apply filters
     if genre_id:
         try:
-            # Validate UUID format
+            # Validate UUID format and convert to UUID object
             from uuid import UUID
-            UUID(genre_id)
-            query = query.filter(Book.genres.any(Genre.id == genre_id))
+            genre_uuid = UUID(genre_id)
+            query = query.filter(Book.genres.any(Genre.id == genre_uuid))
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Invalid genre ID format"
             )
 
@@ -69,7 +69,7 @@ async def get_books(
     books = query.offset(skip).limit(limit).all()
 
     return {
-        "books": books,
+        "books": [BookResponse.model_validate(book) for book in books],
         "total": total,
         "skip": skip,
         "limit": limit,
@@ -106,11 +106,11 @@ async def search_books(
     if genre_id:
         try:
             from uuid import UUID
-            UUID(genre_id)
-            query = query.filter(Book.genres.any(Genre.id == genre_id))
+            genre_uuid = UUID(genre_id)
+            query = query.filter(Book.genres.any(Genre.id == genre_uuid))
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Invalid genre ID format"
             )
 
@@ -119,13 +119,11 @@ async def search_books(
 
     # Order by relevance (title matches first, then author, then by rating)
     # Using CASE WHEN for relevance scoring
-    relevance_score = (
-        func.case(
-            (Book.title.ilike(f"%{search_term}%"), 3),
-            (Book.author.ilike(f"%{search_term}%"), 2),
-            (Book.description.ilike(f"%{search_term}%"), 1),
-            else_=0
-        )
+    relevance_score = case(
+        (Book.title.ilike(f"%{search_term}%"), 3),
+        (Book.author.ilike(f"%{search_term}%"), 2),
+        (Book.description.ilike(f"%{search_term}%"), 1),
+        else_=0
     )
 
     query = query.order_by(
@@ -138,12 +136,12 @@ async def search_books(
     books = query.offset(skip).limit(limit).all()
 
     return {
-        "books": books,
+        "books": [BookResponse.model_validate(book) for book in books],
         "total": total,
         "skip": skip,
         "limit": limit,
         "pages": (total + limit - 1) // limit if total > 0 else 0,
-        "search_query": q
+        "query": q
     }
 
 
@@ -154,20 +152,20 @@ async def get_book(
 ):
     """Get book details by ID"""
 
-    # Validate UUID format
+    # Validate UUID format and convert to UUID object
     try:
         from uuid import UUID
-        UUID(book_id)
+        book_uuid = UUID(book_id)
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Invalid book ID format"
         )
 
     book = db.query(Book).options(
         joinedload(Book.genres),
         joinedload(Book.reviews)
-    ).filter(Book.id == book_id).first()
+    ).filter(Book.id == book_uuid).first()
 
     if not book:
         raise HTTPException(
@@ -175,4 +173,4 @@ async def get_book(
             detail="Book not found"
         )
 
-    return book
+    return BookResponse.model_validate(book)

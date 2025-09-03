@@ -75,6 +75,7 @@ class UserResponse(BaseModel):
     last_name: str = Field(..., description="User last name")
     is_active: bool = Field(..., description="User active status")
     created_at: str = Field(..., description="User creation timestamp")
+    updated_at: str = Field(..., description="User last update timestamp")
     
     class Config:
         from_attributes = True

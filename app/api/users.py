@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
+from uuid import UUID
 
 from app.database import get_db
 from app.models.user import User
@@ -55,7 +56,7 @@ async def update_user_profile(
     return current_user
 
 
-@router.get("/favorites", response_model=List[BookSummary])
+@router.get("/favorites", response_model=dict)
 async def get_user_favorites(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -64,12 +65,24 @@ async def get_user_favorites(
 ):
     """Get user's favorite books with pagination."""
 
+    # Get total count
+    total = db.query(UserFavorite).filter(
+        UserFavorite.user_id == current_user.id
+    ).count()
+
     favorites = db.query(UserFavorite).filter(
         UserFavorite.user_id == current_user.id
     ).offset(skip).limit(limit).all()
 
     books = [favorite.book for favorite in favorites]
-    return books
+    
+    return {
+        "favorites": [BookSummary.model_validate(book) for book in books],
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit if total > 0 else 0
+    }
 
 
 @router.post("/favorites/{book_id}", status_code=status.HTTP_201_CREATED)
@@ -79,9 +92,18 @@ async def add_to_favorites(
     db: Session = Depends(get_db)
 ):
     """Add a book to user's favorites."""
+    
+    # Validate and convert UUID
+    try:
+        book_uuid = UUID(book_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid book ID format"
+        )
 
     # Check if book exists
-    book = db.query(Book).filter(Book.id == book_id).first()
+    book = db.query(Book).filter(Book.id == book_uuid).first()
     if not book:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -91,7 +113,7 @@ async def add_to_favorites(
     # Check if already in favorites
     existing_favorite = db.query(UserFavorite).filter(
         UserFavorite.user_id == current_user.id,
-        UserFavorite.book_id == book_id
+        UserFavorite.book_id == book_uuid
     ).first()
 
     if existing_favorite:
@@ -101,7 +123,7 @@ async def add_to_favorites(
         )
 
     # Add to favorites
-    favorite = UserFavorite(user_id=current_user.id, book_id=book_id)
+    favorite = UserFavorite(user_id=current_user.id, book_id=book_uuid)
     db.add(favorite)
     db.commit()
 
@@ -115,10 +137,19 @@ async def remove_from_favorites(
     db: Session = Depends(get_db)
 ):
     """Remove a book from user's favorites."""
+    
+    # Validate and convert UUID
+    try:
+        book_uuid = UUID(book_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid book ID format"
+        )
 
     favorite = db.query(UserFavorite).filter(
         UserFavorite.user_id == current_user.id,
-        UserFavorite.book_id == book_id
+        UserFavorite.book_id == book_uuid
     ).first()
 
     if not favorite:
@@ -131,7 +162,7 @@ async def remove_from_favorites(
     db.commit()
 
 
-@router.get("/reviews", response_model=List[ReviewWithBook])
+@router.get("/reviews", response_model=dict)
 async def get_user_reviews(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -140,8 +171,19 @@ async def get_user_reviews(
 ):
     """Get user's reviews with book information."""
 
+    # Get total count
+    total = db.query(Review).filter(
+        Review.user_id == current_user.id
+    ).count()
+
     reviews = db.query(Review).filter(
         Review.user_id == current_user.id
     ).order_by(Review.created_at.desc()).offset(skip).limit(limit).all()
 
-    return reviews
+    return {
+        "reviews": [ReviewWithBook.model_validate(review) for review in reviews],
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit if total > 0 else 0
+    }

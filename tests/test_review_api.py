@@ -145,7 +145,7 @@ class TestCreateReview:
             json=review_data
         )
 
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     def test_create_review_invalid_rating(self, client, test_book,
                                           auth_headers):

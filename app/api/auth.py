@@ -73,7 +73,8 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         first_name=new_user.first_name,
         last_name=new_user.last_name,
         is_active=new_user.is_active,
-        created_at=new_user.created_at.isoformat()
+        created_at=new_user.created_at.isoformat(),
+        updated_at=new_user.updated_at.isoformat()
     )
     
     return LoginResponse(
@@ -123,7 +124,8 @@ async def login_for_access_token(
         first_name=user.first_name,
         last_name=user.last_name,
         is_active=user.is_active,
-        created_at=user.created_at.isoformat()
+        created_at=user.created_at.isoformat(),
+        updated_at=user.updated_at.isoformat()
     )
     
     return LoginResponse(
@@ -169,7 +171,8 @@ async def login_json(user_data: UserLogin, db: Session = Depends(get_db)):
         first_name=user.first_name,
         last_name=user.last_name,
         is_active=user.is_active,
-        created_at=user.created_at.isoformat()
+        created_at=user.created_at.isoformat(),
+        updated_at=user.updated_at.isoformat()
     )
     
     return LoginResponse(
