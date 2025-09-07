@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: brs-migration-cronjob
+  namespace: brs-production
+  labels:
+    app: brs-backend
+    component: migration
+    environment: production
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2 AM UTC
+  suspend: true  # Start suspended, enable manually when needed
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: brs-backend
+            component: migration
+            environment: production
+        spec:
+          serviceAccountName: brs-service-account
+          restartPolicy: Never
+          containers:
+          - name: migration
+            image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/brs-backend:latest
+            command: ["alembic", "upgrade", "head"]
+            env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: brs-secrets
+                  key: database-url
+            - name: ENVIRONMENT
+              value: "production"
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: brs-config
+                  key: AWS_REGION
+            - name: AWS_SECRETS_MANAGER
+              valueFrom:
+                configMapKeyRef:
+                  name: brs-config
+                  key: AWS_SECRETS_MANAGER
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1001
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities:
+                drop:
+                - ALL
+          securityContext:
+            fsGroup: 1001
+      backoffLimit: 3
+      activeDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: brs-production
+  labels:
+    name: brs-production
+    environment: production
+    project: brs
+
+

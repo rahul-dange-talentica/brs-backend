@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: brs-backend
+  namespace: brs-production
+  labels:
+    app: brs-backend
+    version: v1.0.0
+    environment: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: brs-backend
+  template:
+    metadata:
+      labels:
+        app: brs-backend
+        version: v1.0.0
+        environment: production
+    spec:
+      serviceAccountName: brs-service-account
+      containers:
+      - name: brs-backend
+        image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/brs-backend:latest
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: brs-secrets
+              key: database-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: brs-secrets
+              key: jwt-secret
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: brs-config
+              key: ENVIRONMENT
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: brs-config
+              key: AWS_REGION
+        - name: AWS_SECRETS_MANAGER
+          valueFrom:
+            configMapKeyRef:
+              name: brs-config
+              key: AWS_SECRETS_MANAGER
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: brs-config
+              key: LOG_LEVEL
+        - name: ENABLE_METRICS
+          valueFrom:
+            configMapKeyRef:
+              name: brs-config
+              key: ENABLE_METRICS
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      securityContext:
+        fsGroup: 1001
+
+

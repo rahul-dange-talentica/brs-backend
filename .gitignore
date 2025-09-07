@@ -151,3 +151,39 @@ docker-compose.override.yml
 
 # Alembic
 alembic.ini
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+crash.log
+crash.*.log
+.terraform.lock.hcl
+
+# AWS & Deployment
+.env.production
+.env.local
+.env.staging
+*.pem
+*.key
+*-key
+*-key.pub
+aws-credentials
+.aws/
+
+# Deployment artifacts
+deploy.log
+deployment.log
+*.tar.gz
+*.zip
+
+# Generated configuration files
+config.env
