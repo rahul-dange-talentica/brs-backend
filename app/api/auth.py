@@ -290,5 +290,6 @@ async def get_current_user_info(current_user: User = Depends(get_current_active_
         first_name=current_user.first_name,
         last_name=current_user.last_name,
         is_active=current_user.is_active,
-        created_at=current_user.created_at.isoformat()
+        created_at=current_user.created_at.isoformat(),
+        updated_at=current_user.updated_at.isoformat()
     )
