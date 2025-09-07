@@ -69,18 +69,34 @@ def create_application() -> FastAPI:
         Authorization: Bearer <your-jwt-token>
         ```
         
-        ### Response Format
+        ### Response Formats
         
-        All API responses follow a consistent JSON structure:
+        The API uses different response formats depending on the endpoint:
         
+        **Standard Format** (Monitoring, some Auth endpoints):
         ```json
         {
             "status": "success",
-            "message": "Operation completed successfully",
+            "message": "Operation completed successfully", 
             "data": {...},
-            "pagination": {...},
             "timestamp": "2024-01-01T12:00:00Z",
             "request_id": "uuid-here"
+        }
+        ```
+        
+        **Direct Schema Format** (Auth, Users, Books, etc.):
+        - Login endpoints return: `{access_token, token_type, expires_in, user}`
+        - User endpoints return user objects directly
+        - Book/Review endpoints return custom paginated objects
+        
+        **Custom Paginated Format** (Books, Reviews, Recommendations):
+        ```json
+        {
+            "items": [...],
+            "total": 100,
+            "skip": 0, 
+            "limit": 20,
+            "pages": 5
         }
         ```
         
@@ -104,8 +120,14 @@ def create_application() -> FastAPI:
         ### Pagination
         
         List endpoints support pagination with the following parameters:
-        - `page`: Page number (default: 1, min: 1, max: 10000)
-        - `per_page`: Items per page (default: 20, min: 1, max: 100)
+        - `skip`: Number of items to skip (default: 0, min: 0)
+        - `limit`: Items per page (default: 20, min: 1, max: 100)
+        
+        Paginated responses include:
+        - `total`: Total number of items available
+        - `skip`: Number of items skipped
+        - `limit`: Maximum items per page requested  
+        - `pages`: Total number of pages available
         
         ### Validation
         
@@ -203,10 +225,11 @@ def custom_openapi():
         }
     }
     
-    # Add common response examples
+    # Add common response examples based on actual API behavior
     openapi_schema["components"]["examples"] = {
-        "SuccessResponse": {
-            "summary": "Successful Response",
+        # Standard response format (used by monitoring and auth endpoints)
+        "StandardSuccessResponse": {
+            "summary": "Standard Success Response (Monitoring endpoints)",
             "value": {
                 "status": "success",
                 "message": "Operation completed successfully",
@@ -215,43 +238,154 @@ def custom_openapi():
                 "request_id": "550e8400-e29b-41d4-a716-446655440000"
             }
         },
+        
+        # Auth login response format
+        "LoginResponse": {
+            "summary": "Login Success Response",
+            "value": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "expires_in": 1800,
+                "user": {
+                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                    "email": "john.doe@example.com",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "is_active": True,
+                    "created_at": "2024-01-01T12:00:00Z",
+                    "updated_at": "2024-01-01T12:00:00Z"
+                }
+            }
+        },
+        
+        # User response format
+        "UserResponse": {
+            "summary": "User Data Response",
+            "value": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "email": "john.doe@example.com",
+                "first_name": "John",
+                "last_name": "Doe",
+                "is_active": True,
+                "created_at": "2024-01-01T12:00:00Z",
+                "updated_at": "2024-01-01T12:00:00Z"
+            }
+        },
+        
+        # Books/Reviews/Recommendations pagination format
+        "CustomPaginatedResponse": {
+            "summary": "Custom Paginated Response (Books, Reviews, etc.)",
+            "value": {
+                "books": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440001",
+                        "title": "The Great Gatsby",
+                        "author": "F. Scott Fitzgerald",
+                        "isbn": "9780743273565",
+                        "description": "A classic American novel",
+                        "average_rating": 4.2,
+                        "total_reviews": 15,
+                        "genres": [],
+                        "recent_reviews": []
+                    }
+                ],
+                "total": 50,
+                "skip": 0,
+                "limit": 20,
+                "pages": 3
+            }
+        },
+        
+        # Recommendations response format
+        "RecommendationsResponse": {
+            "summary": "Recommendations Response",
+            "value": {
+                "recommendations": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440001",
+                        "title": "The Great Gatsby",
+                        "author": "F. Scott Fitzgerald",
+                        "average_rating": 4.2,
+                        "total_reviews": 15
+                    }
+                ],
+                "recommendation_type": "popular",
+                "total": 20,
+                "limit": 20,
+                "filters": {
+                    "genre_id": None,
+                    "min_reviews": 5
+                }
+            }
+        },
+        
+        # Genre list response format
+        "GenresListResponse": {
+            "summary": "Genres List Response",
+            "value": [
+                {
+                    "id": "550e8400-e29b-41d4-a716-446655440001",
+                    "name": "Fiction",
+                    "description": "Literary fiction books",
+                    "created_at": "2024-01-01T12:00:00Z",
+                    "book_count": 25
+                }
+            ]
+        },
+        
+        # User favorites response format
+        "UserFavoritesResponse": {
+            "summary": "User Favorites Response",
+            "value": {
+                "favorites": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440001",
+                        "title": "The Great Gatsby",
+                        "author": "F. Scott Fitzgerald",
+                        "average_rating": 4.2,
+                        "total_reviews": 15
+                    }
+                ],
+                "total": 5,
+                "skip": 0,
+                "limit": 20,
+                "pages": 1
+            }
+        },
+        
+        # Review list response format
+        "ReviewListResponse": {
+            "summary": "Book Reviews Response",
+            "value": {
+                "reviews": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440001",
+                        "user_id": "550e8400-e29b-41d4-a716-446655440002",
+                        "book_id": "550e8400-e29b-41d4-a716-446655440003",
+                        "rating": 5,
+                        "review_text": "Excellent book!",
+                        "created_at": "2024-01-01T12:00:00Z",
+                        "updated_at": "2024-01-01T12:00:00Z",
+                        "user_name": "John Doe"
+                    }
+                ],
+                "total": 12,
+                "skip": 0,
+                "limit": 20,
+                "pages": 1,
+                "book_id": "550e8400-e29b-41d4-a716-446655440003"
+            }
+        },
+        
+        # Error response format
         "ErrorResponse": {
             "summary": "Error Response",
             "value": {
-                "status": "error",
-                "message": "Validation error occurred",
-                "errors": {
-                    "code": "VALIDATION_ERROR",
-                    "fields": {
-                        "email": {
-                            "field": "email",
-                            "message": "Invalid email format",
-                            "type": "value_error.email"
-                        }
-                    }
-                },
-                "timestamp": "2024-01-01T12:00:00Z",
-                "request_id": "550e8400-e29b-41d4-a716-446655440000"
+                "detail": "Validation error occurred"
             }
         },
-        "PaginatedResponse": {
-            "summary": "Paginated List Response",
-            "value": {
-                "status": "success",
-                "message": "Items retrieved successfully",
-                "data": [{"id": "1", "name": "Item 1"}, {"id": "2", "name": "Item 2"}],
-                "pagination": {
-                    "page": 1,
-                    "per_page": 20,
-                    "total": 50,
-                    "pages": 3,
-                    "has_next": True,
-                    "has_prev": False
-                },
-                "timestamp": "2024-01-01T12:00:00Z",
-                "request_id": "550e8400-e29b-41d4-a716-446655440000"
-            }
-        },
+        
+        # Request examples
         "UserCreateExample": {
             "summary": "User Registration Request",
             "value": {
@@ -282,7 +416,9 @@ def custom_openapi():
         }
     }
     
-    # Add common response schemas
+    # Add common response schemas that match actual API behavior
+    
+    # Standard response format (used by monitoring and some auth endpoints)
     openapi_schema["components"]["schemas"]["StandardResponse"] = {
         "type": "object",
         "properties": {
@@ -298,13 +434,6 @@ def custom_openapi():
             "data": {
                 "description": "Response data (varies by endpoint)"
             },
-            "pagination": {
-                "$ref": "#/components/schemas/PaginationMeta"
-            },
-            "errors": {
-                "type": "object",
-                "description": "Error details (only present for error responses)"
-            },
             "timestamp": {
                 "type": "string",
                 "format": "date-time",
@@ -317,6 +446,129 @@ def custom_openapi():
             }
         },
         "required": ["status", "message", "timestamp", "request_id"]
+    }
+    
+    # Custom pagination format (used by books, reviews, recommendations, etc.)
+    openapi_schema["components"]["schemas"]["CustomPagination"] = {
+        "type": "object",
+        "properties": {
+            "total": {
+                "type": "integer",
+                "description": "Total number of items"
+            },
+            "skip": {
+                "type": "integer",
+                "description": "Number of items skipped"
+            },
+            "limit": {
+                "type": "integer", 
+                "description": "Maximum number of items per page"
+            },
+            "pages": {
+                "type": "integer",
+                "description": "Total number of pages"
+            }
+        },
+        "required": ["total", "skip", "limit", "pages"]
+    }
+    
+    # Books list response schema
+    openapi_schema["components"]["schemas"]["BooksListResponse"] = {
+        "type": "object",
+        "properties": {
+            "books": {
+                "type": "array",
+                "items": {"type": "object"}
+            },
+            "total": {"type": "integer"},
+            "skip": {"type": "integer"},
+            "limit": {"type": "integer"},
+            "pages": {"type": "integer"},
+            "query": {
+                "type": "string",
+                "description": "Search query (only present in search responses)"
+            }
+        },
+        "required": ["books", "total", "skip", "limit", "pages"]
+    }
+    
+    # Recommendations response schema
+    openapi_schema["components"]["schemas"]["RecommendationsResponse"] = {
+        "type": "object",
+        "properties": {
+            "recommendations": {
+                "type": "array",
+                "items": {"type": "object"}
+            },
+            "recommendation_type": {"type": "string"},
+            "total": {"type": "integer"},
+            "limit": {"type": "integer"},
+            "filters": {"type": "object"},
+            "genre": {
+                "type": "object",
+                "description": "Genre information (for genre-based recommendations)"
+            },
+            "explanation": {
+                "type": "string",
+                "description": "Explanation (for personal recommendations)"
+            },
+            "user_id": {
+                "type": "string",
+                "description": "User ID (for personal recommendations)"
+            }
+        },
+        "required": ["recommendations", "recommendation_type", "total", "limit"]
+    }
+    
+    # User favorites/reviews response schema
+    openapi_schema["components"]["schemas"]["UserItemsResponse"] = {
+        "type": "object",
+        "properties": {
+            "favorites": {
+                "type": "array",
+                "items": {"type": "object"},
+                "description": "User's favorite books"
+            },
+            "reviews": {
+                "type": "array", 
+                "items": {"type": "object"},
+                "description": "User's reviews"
+            },
+            "total": {"type": "integer"},
+            "skip": {"type": "integer"},
+            "limit": {"type": "integer"},
+            "pages": {"type": "integer"}
+        },
+        "required": ["total", "skip", "limit", "pages"]
+    }
+    
+    # Review list response schema
+    openapi_schema["components"]["schemas"]["ReviewListResponse"] = {
+        "type": "object",
+        "properties": {
+            "reviews": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "string"},
+                        "user_id": {"type": "string"},
+                        "book_id": {"type": "string"},
+                        "rating": {"type": "integer", "minimum": 1, "maximum": 5},
+                        "review_text": {"type": "string"},
+                        "created_at": {"type": "string", "format": "date-time"},
+                        "updated_at": {"type": "string", "format": "date-time"},
+                        "user_name": {"type": "string"}
+                    }
+                }
+            },
+            "total": {"type": "integer"},
+            "skip": {"type": "integer"},
+            "limit": {"type": "integer"},
+            "pages": {"type": "integer"},
+            "book_id": {"type": "string"}
+        },
+        "required": ["reviews", "total", "skip", "limit", "pages", "book_id"]
     }
     
     app.openapi_schema = openapi_schema
