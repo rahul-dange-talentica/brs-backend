@@ -67,24 +67,62 @@ class PersonalRecommendationEngine:
             
             recommendations = []
             
-            # For now, just use popular books to avoid complex logic errors
-            popular_books = await self.popular_engine.get_popular_books(limit=limit)
+            # 60% from favorite genres based on user's high-rated reviews
+            genre_limit = int(limit * 0.6)
+            if user_preferences['favorite_genres']:
+                genre_recommendations = await self._get_genre_based_recommendations(
+                    user_preferences['favorite_genres'],
+                    excluded_books,
+                    genre_limit
+                )
+                recommendations.extend(genre_recommendations)
             
-            # Filter out excluded books if any
-            for book in popular_books:
-                if len(recommendations) >= limit:
-                    break
-                if str(book.id) not in excluded_books:
-                    recommendations.append(book)
-                    
-            # If we still don't have enough after filtering, add more popular books
+            # 40% from collaborative filtering (similar users)
+            collaborative_limit = limit - len(recommendations)
+            if collaborative_limit > 0:
+                collaborative_recommendations = await self._get_collaborative_recommendations(
+                    user_uuid,
+                    excluded_books,
+                    collaborative_limit
+                )
+                recommendations.extend(collaborative_recommendations)
+            
+            # If we still don't have enough recommendations, fill with popular books from favorite genres
+            if len(recommendations) < limit and user_preferences['favorite_genres']:
+                remaining = limit - len(recommendations)
+                for genre_id in user_preferences['favorite_genres']:
+                    if remaining <= 0:
+                        break
+                    genre_popular = await self.popular_engine.get_popular_books(
+                        limit=remaining,
+                        genre_id=genre_id,
+                        min_reviews=1  # Lower threshold for personal recs
+                    )
+                    # Create a set of existing recommendation IDs for faster lookup
+                    existing_ids = {str(book.id) for book in recommendations}
+                    for book in genre_popular:
+                        if len(recommendations) >= limit:
+                            break
+                        if str(book.id) not in excluded_books and str(book.id) not in existing_ids:
+                            recommendations.append(book)
+                            existing_ids.add(str(book.id))
+                            remaining -= 1
+            
+            # Final fallback to general popular books if still not enough
             if len(recommendations) < limit:
-                recommendations.extend(popular_books[:limit - len(recommendations)])
+                fallback_books = await self.popular_engine.get_popular_books(limit=limit)
+                existing_ids = {str(book.id) for book in recommendations}
+                for book in fallback_books:
+                    if len(recommendations) >= limit:
+                        break
+                    if str(book.id) not in excluded_books and str(book.id) not in existing_ids:
+                        recommendations.append(book)
+                        existing_ids.add(str(book.id))
             
             return {
                 'books': recommendations[:limit],
                 'recommendation_type': 'personal',
-                'explanation': 'Based on your reading preferences'
+                'explanation': f'Personalized recommendations based on your {len(user_preferences["favorite_genres"])} favorite genres and similar users'
             }
         except Exception:
             # Final fallback - just return popular books without filtering
@@ -98,7 +136,8 @@ class PersonalRecommendationEngine:
     async def _analyze_user_preferences(self, user_id: uuid.UUID) -> Dict:
         """Analyze user's preferences from reviews and favorites."""
         
-        # Get user's genre preferences from high-rated books (rating >= 4)
+        # Get user's genre preferences from high-rated books (rating >= 3.5)
+        # Lowering threshold to include more moderate positive ratings
         genre_preferences = self.db.query(
             Genre.id,
             Genre.name,
@@ -111,7 +150,7 @@ class PersonalRecommendationEngine:
         ).filter(
             and_(
                 Review.user_id == user_id,
-                Review.rating >= 4  # Only high ratings for preferences
+                Review.rating >= 3.5  # Include moderately positive ratings for preferences
             )
         ).group_by(Genre.id, Genre.name).order_by(
             desc('avg_rating'),

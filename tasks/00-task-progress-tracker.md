@@ -612,3 +612,41 @@ The Book Review System backend is now **100% complete** with enterprise-grade im
 - **New IP**: `34.192.2.109` with full functionality ✅
 
 **The BRS backend is ready for production deployment and can support thousands of users with enterprise-grade reliability, security, and performance!** 🎯
+
+---
+
+## 2025-01-08 - Personal Recommendations Bug Fix & Deployment
+
+### Issues Resolved:
+- [x] **Personal Recommendations Bug**: Fixed fallback to popular books instead of true personalization
+- [x] **Genre-Based Filtering**: Implemented proper user preference analysis (rating ≥ 3.5)
+- [x] **Collaborative Filtering**: Enhanced similar user recommendations
+- [x] **Production Deployment**: Fresh deployment to AWS with all fixes
+
+### Technical Changes:
+- **File**: `app/core/recommendations/personal.py`
+- **Problem**: Personal recommendations were returning same books as popular recommendations
+- **Root Cause**: Temporary fallback code was bypassing personalization logic
+- **Solution**: Implemented proper 60/40 split (genre-based + collaborative filtering)
+- **Rating Threshold**: Lowered from 4.0 to 3.5 for better preference detection
+
+### Key Achievements:
+- ✅ **Personalization Fixed**: "Just For You" now differs from "Popular books"
+- ✅ **Fiction Genre Recognition**: User's Fiction review now influences recommendations
+- ✅ **All Tests Passing**: 18/18 personal recommendation tests successful
+- ✅ **Production Deployment**: Successfully deployed to AWS EC2 (IP: 18.233.174.25)
+- ✅ **Health Checks Passing**: Application responding correctly in production
+
+### Production Status:
+- **Application URL**: http://18.233.174.25
+- **API Documentation**: http://18.233.174.25/docs
+- **Health Check**: http://18.233.174.25/health ✅
+- **Docker Image**: Built and deployed to ECR
+- **Deployment Status**: 100% successful
+
+### User Impact:
+- **Before**: Personal recommendations identical to popular books
+- **After**: Personalized recommendations based on Fiction review and user preferences
+- **Algorithm**: 60% genre-based + 40% collaborative filtering + exclusion of user's books
+
+**Personal recommendations bug is RESOLVED and deployed to production!** 🎯
