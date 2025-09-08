@@ -78,6 +78,7 @@ def create_seed_data():
             "publication_date": date(1925, 4, 10),
             "average_rating": Decimal("4.2"),
             "total_reviews": 1523,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1490528560i/4671.jpg",
             "genres": ["Fiction"]
         },
         {
@@ -88,6 +89,7 @@ def create_seed_data():
             "publication_date": date(1965, 8, 1),
             "average_rating": Decimal("4.5"),
             "total_reviews": 2156,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.jpg",
             "genres": ["Science Fiction", "Fiction"]
         },
         {
@@ -98,6 +100,7 @@ def create_seed_data():
             "publication_date": date(1954, 7, 29),
             "average_rating": Decimal("4.7"),
             "total_reviews": 3421,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1298411339i/33.jpg",
             "genres": ["Fantasy", "Fiction"]
         },
         {
@@ -108,6 +111,7 @@ def create_seed_data():
             "publication_date": date(1934, 1, 1),
             "average_rating": Decimal("4.3"),
             "total_reviews": 1876,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1486131451i/853510.jpg",
             "genres": ["Mystery", "Fiction"]
         },
         {
@@ -118,6 +122,7 @@ def create_seed_data():
             "publication_date": date(1813, 1, 28),
             "average_rating": Decimal("4.4"),
             "total_reviews": 2943,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1320399351i/1885.jpg",
             "genres": ["Romance", "Fiction"]
         },
         {
@@ -128,6 +133,7 @@ def create_seed_data():
             "publication_date": date(2005, 8, 1),
             "average_rating": Decimal("4.1"),
             "total_reviews": 1654,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1327868566i/2429135.jpg",
             "genres": ["Thriller", "Mystery"]
         },
         {
@@ -138,6 +144,7 @@ def create_seed_data():
             "publication_date": date(2011, 10, 24),
             "average_rating": Decimal("4.3"),
             "total_reviews": 987,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1511288482i/11084145.jpg",
             "genres": ["Biography", "Technology"]
         },
         {
@@ -148,6 +155,7 @@ def create_seed_data():
             "publication_date": date(2014, 2, 10),
             "average_rating": Decimal("4.6"),
             "total_reviews": 2134,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1420585954i/23692271.jpg",
             "genres": ["History"]
         },
         {
@@ -158,6 +166,7 @@ def create_seed_data():
             "publication_date": date(2018, 10, 16),
             "average_rating": Decimal("4.8"),
             "total_reviews": 3542,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
             "genres": ["Self-Help"]
         },
         {
@@ -168,6 +177,7 @@ def create_seed_data():
             "publication_date": date(2008, 8, 1),
             "average_rating": Decimal("4.4"),
             "total_reviews": 1432,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1436202607i/3735293.jpg",
             "genres": ["Technology"]
         },
         {
@@ -178,6 +188,7 @@ def create_seed_data():
             "publication_date": date(1949, 6, 8),
             "average_rating": Decimal("4.5"),
             "total_reviews": 4321,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1532714506i/40961427.jpg",
             "genres": ["Fiction", "Science Fiction"]
         },
         {
@@ -188,6 +199,7 @@ def create_seed_data():
             "publication_date": date(1937, 9, 21),
             "average_rating": Decimal("4.6"),
             "total_reviews": 2876,
+            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1546071216i/5907.jpg",
             "genres": ["Fantasy", "Fiction"]
         }
     ]
@@ -227,6 +239,7 @@ def create_seed_data():
                     author=book_data["author"],
                     isbn=book_data["isbn"],
                     description=book_data["description"],
+                    cover_image_url=book_data["cover_image_url"],
                     publication_date=book_data["publication_date"],
                     average_rating=book_data["average_rating"],
                     total_reviews=book_data["total_reviews"]
