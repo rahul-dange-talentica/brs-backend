@@ -289,10 +289,10 @@ class EnhancedRateLimitMiddleware(RateLimitMiddleware):
         # Endpoint-specific limits
         # Format: {"/api/v1/auth/login": {"authenticated": 10, "anonymous": 5}}
         self.endpoint_limits = endpoint_limits or {
-            "/api/v1/auth/login": {"authenticated": 10, "anonymous": 5},
-            "/api/v1/auth/register": {"authenticated": 5, "anonymous": 3},
-            "/api/v1/reviews": {"authenticated": 20, "anonymous": 5},
-            "/api/v1/books": {"authenticated": 50, "anonymous": 10}
+            "/api/v1/auth/login": {"authenticated": 100, "anonymous": 20},
+            "/api/v1/auth/register": {"authenticated": 100, "anonymous": 20},
+            "/api/v1/reviews": {"authenticated": 1000, "anonymous": 100},
+            "/api/v1/books": {"authenticated": 1000, "anonymous": 100}
         }
         
         # Burst protection (very short window)

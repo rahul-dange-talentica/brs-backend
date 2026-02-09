@@ -100,7 +100,7 @@ def create_seed_data():
             "publication_date": date(1954, 7, 29),
             "average_rating": Decimal("4.7"),
             "total_reviews": 3421,
-            "cover_image_url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1298411339i/33.jpg",
+            "cover_image_url": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1630657083i/15222.jpg",
             "genres": ["Fantasy", "Fiction"]
         },
         {
