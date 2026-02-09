@@ -114,7 +114,7 @@ def create_application() -> FastAPI:
         
         ### Rate Limiting
         
-        API requests are limited to 100 requests per minute per authenticated user.
+        API requests are limited to 1000 requests per minute per authenticated user.
         Anonymous requests are limited to 20 requests per minute per IP address.
         
         ### Pagination
@@ -146,10 +146,10 @@ def create_application() -> FastAPI:
         For detailed documentation on each endpoint, explore the sections below.
         """,
         version="1.0.0",
-        terms_of_service="https://brs.example.com/terms",
+        terms_of_service="http://100.49.147.236/terms",
         contact={
             "name": "BRS API Support Team",
-            "url": "https://brs.example.com/support",
+            "url": "http://100.49.147.236/support",
             "email": "api-support@brs.example.com",
         },
         license_info={
@@ -172,10 +172,10 @@ def create_application() -> FastAPI:
     # Rate limiting middleware (should be added early)
     application.add_middleware(
         EnhancedRateLimitMiddleware,
-        authenticated_limit=100,  # 100 requests per minute for authenticated users
-        anonymous_limit=20,       # 20 requests per minute for anonymous users
-        window_seconds=60,        # 1 minute window
-        burst_limit=10,          # Max 10 requests in 10 seconds (burst protection)
+        authenticated_limit=1000,  # 1000 requests per minute for authenticated users
+        anonymous_limit=20,        # 20 requests per minute for anonymous users
+        window_seconds=60,         # 1 minute window
+        burst_limit=50,           # Max 50 requests in 10 seconds (burst protection)
         burst_window=10
     )
     
@@ -209,8 +209,7 @@ def custom_openapi():
         description=app.description,
         routes=app.routes,
         servers=[
-            {"url": "https://api.brs.example.com", "description": "Production server"},
-            {"url": "https://staging-api.brs.example.com", "description": "Staging server"},
+            {"url": "http://100.49.147.236", "description": "Production server (EC2)"},
             {"url": "http://localhost:8000", "description": "Development server"}
         ]
     )
@@ -618,7 +617,7 @@ async def root():
             },
             "support": {
                 "email": "api-support@brs.example.com",
-                "documentation": "https://brs.example.com/docs"
+                "documentation": "http://100.49.147.236/docs"
             }
         },
         message=f"Welcome to {settings.app_name} API v{settings.app_version}"

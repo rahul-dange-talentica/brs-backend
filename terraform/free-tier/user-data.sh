@@ -77,7 +77,7 @@ ENVIRONMENT=production
 AWS_REGION=${aws_region}
 LOG_LEVEL=INFO
 ENABLE_METRICS=true
-TRUSTED_HOSTS_STR=localhost,127.0.0.1,${elastic_ip},*.brs.example.com
+TRUSTED_HOSTS_STR=*
 AWS_SECRETS_MANAGER=true
 EOF
 

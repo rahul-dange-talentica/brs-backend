@@ -20,7 +20,7 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry config virtualenvs.create false
 
 # Install dependencies
-RUN poetry install --only main --no-interaction --no-ansi
+RUN poetry install --only main --no-root --no-interaction --no-ansi
 
 # Production stage
 FROM python:3.11-slim
@@ -52,8 +52,8 @@ COPY alembic.ini ./
 COPY seed_data.py ./
 COPY entrypoint.sh ./
 
-# Make entrypoint script executable and set ownership
-RUN chmod +x entrypoint.sh && chown -R appuser:appuser /app
+# Fix line endings and make entrypoint script executable
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh && chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser

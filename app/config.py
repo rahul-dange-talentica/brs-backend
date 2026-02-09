@@ -24,12 +24,13 @@ class Settings(BaseSettings):
     debug: bool = False
     
     # CORS
-    backend_cors_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
-    allowed_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    backend_cors_origins: List[str] = ["*"]
+    allowed_origins: List[str] = ["*"]
     
     # Additional Security Settings
-    trusted_hosts_str: str = "localhost,127.0.0.1,testserver,*.brs.example.com"
-    trusted_hosts: List[str] = ["localhost", "127.0.0.1", "testserver", "*.brs.example.com"]
+    # Allow all hosts for CloudFront compatibility (CloudFront sends EC2 hostname)
+    trusted_hosts_str: str = "*"
+    trusted_hosts: List[str] = ["*"]
     
     # Environment
     environment: str = "development"
@@ -57,10 +58,11 @@ class Settings(BaseSettings):
         
         # Update CORS origins for production
         if self.environment == "production":
-            self.allowed_origins = ["https://brs.example.com"]
+            # Allow all origins since we don't have a domain name
+            self.allowed_origins = ["*"]
             # Don't override trusted_hosts in production if it was set via environment
             if not hasattr(self, 'trusted_hosts_str') or not self.trusted_hosts_str:
-                self.trusted_hosts = ["api.brs.example.com", "*.brs.example.com"]
+                self.trusted_hosts = ["*"]
             self.debug = False
             self.aws_secrets_manager = True
         
